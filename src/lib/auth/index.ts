@@ -5,6 +5,7 @@ import db from "@/lib/db";
 import {
   env,
   getAuthBaseUrl,
+  getTrustedOrigins,
   isAppleOAuthEnabled,
   isGoogleOAuthEnabled,
 } from "@/lib/env";
@@ -15,6 +16,7 @@ export const auth = betterAuth({
   }),
   secret: env.BETTER_AUTH_SECRET,
   baseURL: getAuthBaseUrl(),
+  trustedOrigins: getTrustedOrigins(),
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,

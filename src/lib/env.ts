@@ -70,8 +70,50 @@ function parseEnv(): Env {
 
 export const env = parseEnv();
 
+/** Resolve the public app URL across local, Vercel preview, and production. */
+export function getAppUrl(): string {
+  // Explicit production URL takes priority when set to something other than localhost
+  if (
+    env.NEXT_PUBLIC_APP_URL &&
+    !env.NEXT_PUBLIC_APP_URL.includes("localhost")
+  ) {
+    return env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+  }
+
+  // Vercel sets VERCEL_URL without protocol (e.g. hdsales.vercel.app)
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL.replace(/\/$/, "")}`;
+  }
+
+  if (env.BETTER_AUTH_URL) {
+    return env.BETTER_AUTH_URL.replace(/\/$/, "");
+  }
+
+  return env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+}
+
 export function getAuthBaseUrl() {
-  return env.BETTER_AUTH_URL ?? env.NEXT_PUBLIC_APP_URL;
+  return (env.BETTER_AUTH_URL ?? getAppUrl()).replace(/\/$/, "");
+}
+
+export function getTrustedOrigins(): string[] {
+  const origins = new Set<string>([
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    getAppUrl(),
+    getAuthBaseUrl(),
+    "https://*.vercel.app",
+  ]);
+
+  if (process.env.VERCEL_URL) {
+    origins.add(`https://${process.env.VERCEL_URL.replace(/\/$/, "")}`);
+  }
+
+  if (env.NEXT_PUBLIC_APP_URL) {
+    origins.add(env.NEXT_PUBLIC_APP_URL.replace(/\/$/, ""));
+  }
+
+  return [...origins];
 }
 
 export function isGoogleOAuthEnabled() {
