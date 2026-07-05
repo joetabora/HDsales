@@ -1,6 +1,7 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
+import { env } from "@/lib/env";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -8,12 +9,8 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error("DATABASE_URL is not set");
-  }
-
-  const pool = globalForPrisma.pool ?? new Pool({ connectionString });
+  // env.DATABASE_URL has a build-time fallback; set a real URL in Vercel for runtime.
+  const pool = globalForPrisma.pool ?? new Pool({ connectionString: env.DATABASE_URL });
   if (process.env.NODE_ENV !== "production") {
     globalForPrisma.pool = pool;
   }
