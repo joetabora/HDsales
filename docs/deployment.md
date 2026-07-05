@@ -3,9 +3,11 @@
 ## Vercel (Recommended for App)
 
 1. Connect GitHub repo to Vercel
-2. Set environment variables from `.env.example`
-3. Add Postgres (Neon/Supabase with pgvector) and Redis (Upstash)
-4. Deploy — `npm run build` runs automatically
+2. Set environment variables in Vercel **before** the first deploy (see table below)
+3. Add Postgres (Neon/Supabase with pgvector)
+4. Deploy — `npm run build` runs `prisma generate && next build`
+
+> **Note:** `DATABASE_URL` must be set in Vercel env vars for runtime. A placeholder is used during `prisma generate` if missing at build time, but the app will not work until a real database URL is configured.
 
 ## Docker (Self-Hosted)
 
