@@ -183,7 +183,7 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
                     <Command.Item
                       key={u.id}
                       value={`inventory-${u.id}`}
-                      onSelect={() => navigate(`/inventory/${u.id}`)}
+                      onSelect={() => navigate(`/inventory?search=${encodeURIComponent(`${u.year} ${u.make} ${u.model}`)}`)}
                       className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm aria-selected:bg-forge-surface-hover"
                     >
                       <Package className="h-4 w-4 text-blue-400" />

@@ -55,7 +55,6 @@ export async function getCustomerById(id: string, dealershipId: string) {
     include: {
       assignedTo: { select: { id: true, name: true, image: true, email: true } },
       tags: { include: { tag: true } },
-      aiInsights: true,
       deals: {
         where: { deletedAt: null },
         include: { inventoryUnit: true },
@@ -119,10 +118,11 @@ export async function updateCustomer(
   dealershipId: string,
   data: Prisma.CustomerUpdateInput
 ) {
-  return db.customer.update({
-    where: { id, dealershipId },
-    data,
+  const existing = await db.customer.findFirst({
+    where: { id, dealershipId, deletedAt: null },
   });
+  if (!existing) throw new Error("Customer not found");
+  return db.customer.update({ where: { id }, data });
 }
 
 export async function addInteraction(

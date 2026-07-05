@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import {
-  ArrowUpRight,
   Cake,
+  Calendar,
   Flame,
   Handshake,
   TrendingUp,
@@ -20,30 +20,10 @@ export default async function DashboardPage() {
   const data = await getDashboardData(dealershipId, user.id);
 
   const metrics = [
-    {
-      label: "Sold This Month",
-      value: data.metrics.soldThisMonth.toString(),
-      icon: Handshake,
-      change: "+12%",
-    },
-    {
-      label: "Closing Ratio",
-      value: `${data.metrics.closingRatio}%`,
-      icon: TrendingUp,
-      change: "+3.2%",
-    },
-    {
-      label: "Total Leads",
-      value: data.metrics.totalLeads.toString(),
-      icon: Users,
-      change: "+8",
-    },
-    {
-      label: "Revenue",
-      value: formatCurrency(data.metrics.revenue),
-      icon: ArrowUpRight,
-      change: "+18%",
-    },
+    { label: "Sold This Month", value: data.metrics.soldThisMonth.toString(), icon: Handshake },
+    { label: "Closing Ratio", value: `${data.metrics.closingRatio}%`, icon: TrendingUp },
+    { label: "Customers", value: data.metrics.totalCustomers.toString(), icon: Users },
+    { label: "Revenue", value: formatCurrency(data.metrics.revenue), icon: Flame },
   ];
 
   return (
@@ -59,14 +39,13 @@ export default async function DashboardPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {metrics.map((metric) => (
-          <Card key={metric.label} className="relative overflow-hidden">
+          <Card key={metric.label}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardDescription>{metric.label}</CardDescription>
               <metric.icon className="h-4 w-4 text-forge-muted" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{metric.value}</div>
-              <p className="text-xs text-emerald-400 mt-1">{metric.change} from last month</p>
             </CardContent>
           </Card>
         ))}
@@ -109,10 +88,38 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-forge-accent" />
+              Today&apos;s Appointments
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {data.appointments.length === 0 ? (
+              <p className="text-sm text-forge-muted py-4 text-center">No appointments today</p>
+            ) : (
+              data.appointments.map((appt) => (
+                <Link
+                  key={appt.id}
+                  href={`/customers/${appt.customer.id}`}
+                  className="flex items-center justify-between rounded-lg border border-forge-border p-3 hover:bg-forge-surface-hover transition-colors"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{appt.title}</p>
+                    <p className="text-xs text-forge-muted">
+                      {fullName(appt.customer.firstName, appt.customer.lastName)}
+                    </p>
+                  </div>
+                </Link>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
               <Cake className="h-5 w-5 text-forge-accent" />
               Birthdays Today
             </CardTitle>
-            <CardDescription>Send a personal touch</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {data.birthdays.length === 0 ? (
@@ -128,6 +135,34 @@ export default async function DashboardPage() {
                     {fullName(customer.firstName, customer.lastName)}
                   </p>
                   <Badge variant="default">Birthday</Badge>
+                </Link>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Pending Deals</CardTitle>
+            <CardDescription>Negotiating, financing, or waiting</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {data.pendingDeals.length === 0 ? (
+              <p className="text-sm text-forge-muted py-4 text-center">No pending deals</p>
+            ) : (
+              data.pendingDeals.map((deal) => (
+                <Link
+                  key={deal.id}
+                  href={`/customers/${deal.customer.id}`}
+                  className="flex items-center justify-between rounded-lg border border-forge-border p-3 hover:bg-forge-surface-hover transition-colors"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{deal.title}</p>
+                    <p className="text-xs text-forge-muted">
+                      {fullName(deal.customer.firstName, deal.customer.lastName)}
+                    </p>
+                  </div>
+                  <Badge variant="outline">{deal.stage.replace(/_/g, " ")}</Badge>
                 </Link>
               ))
             )}
@@ -165,7 +200,6 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest customer interactions</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {data.recentActivity.length === 0 ? (
@@ -181,7 +215,6 @@ export default async function DashboardPage() {
                     <p className="text-sm font-medium">{activity.title}</p>
                     <p className="text-xs text-forge-muted">
                       {fullName(activity.customer.firstName, activity.customer.lastName)}
-                      {activity.user ? ` · ${activity.user.name}` : ""}
                     </p>
                   </div>
                   <span className="text-[10px] text-forge-muted whitespace-nowrap">
@@ -197,7 +230,6 @@ export default async function DashboardPage() {
       <Card>
         <CardHeader>
           <CardTitle>My Tasks</CardTitle>
-          <CardDescription>Your open tasks sorted by due date</CardDescription>
         </CardHeader>
         <CardContent>
           {data.tasks.length === 0 ? (
@@ -214,15 +246,7 @@ export default async function DashboardPage() {
                       </p>
                     )}
                   </div>
-                  <Badge
-                    variant={
-                      task.priority === "URGENT"
-                        ? "destructive"
-                        : task.priority === "HIGH"
-                          ? "warning"
-                          : "secondary"
-                    }
-                  >
+                  <Badge variant={task.priority === "HIGH" ? "warning" : "secondary"}>
                     {task.priority.toLowerCase()}
                   </Badge>
                 </div>

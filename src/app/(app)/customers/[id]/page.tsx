@@ -4,18 +4,19 @@ import { ArrowLeft, Mail, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { getDealershipId } from "@/lib/auth/session";
 import { formatPhone, fullName } from "@/lib/utils";
 import {
   getCustomerById,
   getCustomerTimeline,
 } from "@/server/services/customer.service";
-import { getLatestDealBrief } from "@/server/services/ai.service";
+import { buildWalkUpCard } from "@/server/services/walkup.service";
 import { Timeline } from "@/features/customers/components/timeline";
-import { AiInsightsPanel } from "@/features/customers/components/ai-insights-panel";
-import { DealBriefCard } from "@/features/customers/components/deal-brief-card";
-import { VoiceCapture } from "@/features/customers/components/voice-capture";
+import { WalkUpCard } from "@/features/customers/components/walk-up-card";
+import { CustomerEditForm } from "@/features/customers/components/customer-edit-form";
+import { LogInteraction } from "@/features/customers/components/log-interaction";
+import { StartDealForm } from "@/features/customers/components/start-deal-form";
+import { NewTaskForm } from "@/features/customers/components/new-task-form";
 
 interface CustomerDetailPageProps {
   params: Promise<{ id: string }>;
@@ -25,13 +26,13 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
   const { id } = await params;
   const dealershipId = await getDealershipId();
 
-  const [customer, timeline, latestBrief] = await Promise.all([
+  const [customer, timeline, walkUp] = await Promise.all([
     getCustomerById(id, dealershipId),
     getCustomerTimeline(id),
-    getLatestDealBrief(id),
+    buildWalkUpCard(id, dealershipId),
   ]);
 
-  if (!customer) {
+  if (!customer || !walkUp) {
     notFound();
   }
 
@@ -83,11 +84,7 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
-          <DealBriefCard
-            customerId={customer.id}
-            customerName={name}
-            initialBrief={latestBrief}
-          />
+          <WalkUpCard data={walkUp} customerId={customer.id} />
 
           <Card>
             <CardHeader>
@@ -97,43 +94,14 @@ export default async function CustomerDetailPage({ params }: CustomerDetailPageP
               <Timeline interactions={timeline} />
             </CardContent>
           </Card>
+
+          <CustomerEditForm customer={customer} />
         </div>
 
         <div className="space-y-6">
-          <AiInsightsPanel customerId={customer.id} insights={customer.aiInsights} />
-
-          <VoiceCapture customerId={customer.id} />
-
-          {(customer.dreamBike || customer.currentBike) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Bike Profile</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {customer.dreamBike && (
-                  <div>
-                    <p className="text-xs text-forge-muted uppercase tracking-wider">Dream Bike</p>
-                    <p className="text-sm font-medium mt-0.5">{customer.dreamBike}</p>
-                  </div>
-                )}
-                {customer.currentBike && (
-                  <div>
-                    <p className="text-xs text-forge-muted uppercase tracking-wider">Current Bike</p>
-                    <p className="text-sm font-medium mt-0.5">{customer.currentBike}</p>
-                  </div>
-                )}
-                {customer.spouseName && (
-                  <>
-                    <Separator />
-                    <div>
-                      <p className="text-xs text-forge-muted uppercase tracking-wider">Spouse</p>
-                      <p className="text-sm font-medium mt-0.5">{customer.spouseName}</p>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          )}
+          <LogInteraction customerId={customer.id} />
+          <StartDealForm customerId={customer.id} customerName={name} />
+          <NewTaskForm customerId={customer.id} customerName={name} />
 
           {customer.tasks.length > 0 && (
             <Card>

@@ -5,23 +5,18 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   BarChart3,
-  Bot,
   Calendar,
-  CalendarDays,
   CheckSquare,
   Flame,
   LayoutDashboard,
-  MessageSquare,
   Package,
   Settings,
   Sparkles,
   UserPlus,
   Users,
-  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 
 const mainNav = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -31,13 +26,6 @@ const mainNav = [
   { title: "Inventory", href: "/inventory", icon: Package },
   { title: "Tasks", href: "/tasks", icon: CheckSquare },
   { title: "Calendar", href: "/calendar", icon: Calendar },
-  { title: "Events", href: "/events", icon: CalendarDays },
-  { title: "Messages", href: "/messages", icon: MessageSquare },
-];
-
-const secondaryNav = [
-  { title: "AI Assistant", href: "/assistant", icon: Bot },
-  { title: "Knowledge Base", href: "/knowledge", icon: BookOpen },
   { title: "Reports", href: "/reports", icon: BarChart3 },
   { title: "Settings", href: "/settings", icon: Settings },
 ];
@@ -95,35 +83,23 @@ export function AppSidebar() {
         </div>
         <div>
           <p className="text-sm font-bold tracking-tight text-forge-foreground">Forge</p>
-          <p className="text-[10px] uppercase tracking-widest text-forge-muted">Sales OS</p>
+          <p className="text-[10px] uppercase tracking-widest text-forge-muted">Harley Sales</p>
         </div>
       </div>
 
       <ScrollArea className="flex-1 px-3 py-4">
         <nav className="space-y-1">
-          <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-forge-muted">
-            Main
-          </p>
           {mainNav.map((item) => (
-            <NavItem key={item.href} {...item} active={isActive(item.href)} />
-          ))}
-
-          <Separator className="my-4" />
-
-          <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-forge-muted">
-            Intelligence
-          </p>
-          {secondaryNav.map((item) => (
             <NavItem key={item.href} {...item} active={isActive(item.href)} />
           ))}
         </nav>
       </ScrollArea>
 
       <div className="border-t border-forge-border p-4">
-        <div className="rounded-lg bg-gradient-to-br from-forge-accent/20 to-forge-accent/5 border border-forge-accent/20 p-3">
-          <p className="text-xs font-medium text-forge-foreground">AI Deal Briefs</p>
+        <div className="rounded-lg bg-forge-surface border border-forge-border p-3">
+          <p className="text-xs font-medium text-forge-foreground">Walk-Up Cards</p>
           <p className="mt-1 text-[11px] text-forge-muted-foreground leading-relaxed">
-            Prep for every conversation with Mike Anderson-style briefs.
+            Tap any customer for instant intel before you walk up.
           </p>
         </div>
       </div>

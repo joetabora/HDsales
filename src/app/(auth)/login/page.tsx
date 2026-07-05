@@ -67,7 +67,7 @@ export default function LoginPage() {
           <div>
             <CardTitle className="text-2xl font-bold">Welcome to Forge</CardTitle>
             <CardDescription className="text-forge-muted-foreground mt-1">
-              AI-powered sales OS for powersports dealers
+              The sales OS built for Harley dealers
             </CardDescription>
           </div>
         </CardHeader>

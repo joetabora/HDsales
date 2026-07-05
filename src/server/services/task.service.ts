@@ -47,6 +47,7 @@ export async function getDashboardData(dealershipId: string, userId: string) {
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
   const [
     todayFollowUps,
@@ -57,7 +58,8 @@ export async function getDashboardData(dealershipId: string, userId: string) {
     recentActivity,
     tasks,
     soldThisMonth,
-    totalLeads,
+    totalCustomers,
+    revenueAgg,
   ] = await Promise.all([
     db.task.findMany({
       where: {
@@ -127,13 +129,22 @@ export async function getDashboardData(dealershipId: string, userId: string) {
       where: {
         dealershipId,
         stage: "SOLD",
-        closedAt: { gte: new Date(today.getFullYear(), today.getMonth(), 1) },
+        closedAt: { gte: monthStart },
       },
     }),
     db.customer.count({ where: { dealershipId, deletedAt: null } }),
+    db.deal.aggregate({
+      where: {
+        dealershipId,
+        stage: "SOLD",
+        closedAt: { gte: monthStart },
+      },
+      _sum: { amount: true },
+    }),
   ]);
 
-  const closingRatio = totalLeads > 0 ? (soldThisMonth / totalLeads) * 100 : 0;
+  const revenue = Number(revenueAgg._sum.amount ?? 0);
+  const closingRatio = totalCustomers > 0 ? (soldThisMonth / totalCustomers) * 100 : 0;
 
   return {
     todayFollowUps,
@@ -152,8 +163,8 @@ export async function getDashboardData(dealershipId: string, userId: string) {
     metrics: {
       closingRatio: Math.round(closingRatio * 10) / 10,
       soldThisMonth,
-      totalLeads,
-      revenue: soldThisMonth * 28500,
+      totalCustomers,
+      revenue,
     },
   };
 }

@@ -55,7 +55,7 @@ export default function SignupPage() {
           <div>
             <CardTitle className="text-2xl font-bold">Create your Forge account</CardTitle>
             <CardDescription className="text-forge-muted-foreground mt-1">
-              Start selling smarter with AI-powered tools
+              Built for Harley-Davidson salespeople
             </CardDescription>
           </div>
         </CardHeader>
@@ -65,7 +65,7 @@ export default function SignupPage() {
               <Label htmlFor="name">Full name</Label>
               <Input
                 id="name"
-                placeholder="Mike Anderson"
+                placeholder="Jordan Smith"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required

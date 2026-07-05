@@ -1,6 +1,7 @@
 import { CheckSquare } from "lucide-react";
 import { getDealershipId } from "@/lib/auth/session";
 import { listTasks } from "@/server/services/task.service";
+import { NewTaskForm } from "@/features/customers/components/new-task-form";
 import { TaskList } from "@/features/tasks/components/task-list";
 import type { TaskItem } from "@/features/tasks/components/task-list";
 
@@ -23,14 +24,19 @@ export default async function TasksPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-          <CheckSquare className="h-6 w-6 text-forge-accent" />
-          Tasks
-        </h1>
-        <p className="text-forge-muted-foreground mt-1">
-          {openCount} open task{openCount !== 1 ? "s" : ""}
-        </p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <CheckSquare className="h-6 w-6 text-forge-accent" />
+            Tasks
+          </h1>
+          <p className="text-forge-muted-foreground mt-1">
+            {openCount} open task{openCount !== 1 ? "s" : ""}
+          </p>
+        </div>
+        <div className="w-48">
+          <NewTaskForm />
+        </div>
       </div>
 
       <TaskList initialTasks={serialized} />

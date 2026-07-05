@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Forge — The AI Sales Operating System",
-  description: "AI-powered sales operating system for powersports dealers",
+  title: "Forge — The Sales Operating System for Harley Dealers",
+  description: "Sales operating system built for Harley-Davidson salespeople",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

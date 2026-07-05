@@ -125,29 +125,6 @@ async function main() {
     },
   });
 
-  await db.customerAiInsight.upsert({
-    where: { customerId: mike.id },
-    update: {},
-    create: {
-      customerId: mike.id,
-      conversationSummary:
-        "Mike is a serious buyer interested in upgrading to a Road Glide ST. Wife Sarah is involved and concerned about monthly payment staying under $550. Has a 2021 Street Glide Special to trade. Planning Sturgis trip in August.",
-      buyingSignals: [
-        "Specific model and color preference",
-        "Trade-in ready",
-        "Event attendee — Bike Night",
-        "Returned for follow-up",
-      ],
-      riskFactors: ["Payment sensitivity", "Joint decision with spouse"],
-      likelyObjections: ["Monthly payment too high", "Trade value expectations"],
-      favoriteTopics: ["Road Glide ST", "Sturgis", "Touring accessories"],
-      suggestedOpener: "How's the Sturgis planning going?",
-      recommendedFollowUp: "Schedule demo ride with updated financing under $550/month",
-      budgetTarget: "under $550/month",
-      closeProbability: 0.72,
-    },
-  });
-
   const customers = [
     { firstName: "Lisa", lastName: "Chen", email: "lisa.chen@email.com", phone: "4145550201", dreamBike: "Sportster S", valueScore: 65, assignedToId: salesperson.id },
     { firstName: "Tom", lastName: "Williams", email: "tom.w@email.com", phone: "4145550202", dreamBike: "Pan America 1250", valueScore: 55, assignedToId: salesperson.id },
