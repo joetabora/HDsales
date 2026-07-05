@@ -5,9 +5,18 @@
 1. Connect GitHub repo to Vercel
 2. Set environment variables in Vercel **before** the first deploy (see table below)
 3. Add Postgres (Neon/Supabase with pgvector)
-4. Deploy — `npm run build` runs `prisma generate && next build`
+4. Deploy — build runs `prisma migrate deploy` to create tables, then `next build`
 
-> **Note:** `DATABASE_URL` must be set in Vercel env vars for runtime. A placeholder is used during `prisma generate` if missing at build time, but the app will not work until a real database URL is configured.
+> **First deploy:** Ensure `DATABASE_URL` points to your Neon database **before** deploying. The build step creates all tables automatically.
+
+### Manual setup (optional)
+
+If tables are missing, run from your machine:
+
+```bash
+DATABASE_URL="your-neon-url" npx prisma migrate deploy
+DATABASE_URL="your-neon-url" npm run db:seed   # optional demo data
+```
 
 ## Docker (Self-Hosted)
 
