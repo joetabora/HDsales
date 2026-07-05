@@ -1,0 +1,909 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [pgvector(map: "vector"), pg_trgm]
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Vertical {
+  POWERSPORTS
+  AUTOMOTIVE
+  RV
+  MARINE
+  LUXURY
+  REAL_ESTATE
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  SALESPERSON
+}
+
+enum InteractionType {
+  WALK_IN
+  PHONE
+  EMAIL
+  TEXT
+  APPOINTMENT
+  DEMO_RIDE
+  PURCHASE
+  EVENT
+  SERVICE
+  TRADE
+  ACCESSORY
+  BIRTHDAY
+  NOTE
+  VOICE_NOTE
+}
+
+enum DealStage {
+  WALK_IN
+  QUALIFIED
+  NEEDS_TRADE
+  FINANCING
+  DEMO_RIDE
+  NEGOTIATING
+  WAITING
+  SOLD
+  LOST
+  ARCHIVED
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum InventoryStatus {
+  AVAILABLE
+  PENDING
+  SOLD
+  HOLD
+  INCOMING
+}
+
+enum MessageChannel {
+  SMS
+  EMAIL
+}
+
+enum MessageStatus {
+  DRAFT
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum FollowUpStepType {
+  TEXT
+  EMAIL
+  CALL
+  TASK
+  EVENT_INVITE
+}
+
+enum MediaType {
+  PHOTO
+  DOCUMENT
+  LICENSE
+  INSURANCE
+  VOICE
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  COMPLETED
+  CANCELLED
+}
+
+// ─── Organization ────────────────────────────────────────────────────────────
+
+model Dealership {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  vertical  Vertical @default(POWERSPORTS)
+  timezone  String   @default("America/Chicago")
+  address   String?
+  city      String?
+  state     String?
+  zip       String?
+  phone     String?
+  logoUrl   String?
+  settings  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  users              User[]
+  customers          Customer[]
+  deals              Deal[]
+  tasks              Task[]
+  inventory          InventoryUnit[]
+  events             Event[]
+  messages           Message[]
+  messageTemplates   MessageTemplate[]
+  followUpSequences  FollowUpSequence[]
+  knowledgeArticles  KnowledgeArticle[]
+  activityLogs       ActivityLog[]
+  tags               Tag[]
+  appointments       Appointment[]
+  tradeEstimates     TradeEstimate[]
+  paymentQuotes      PaymentQuote[]
+
+  @@index([slug])
+  @@map("dealerships")
+}
+
+// ─── Auth (Better Auth compatible) ───────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  role          UserRole  @default(SALESPERSON)
+  dealershipId  String
+  dealership    Dealership @relation(fields: [dealershipId], references: [id])
+  phone         String?
+  title         String?
+  bio           String?
+  qrSlug        String?   @unique
+  isActive      Boolean   @default(true)
+
+  sessions      Session[]
+  accounts      Account[]
+  customers     Customer[]       @relation("AssignedSalesperson")
+  deals         Deal[]
+  tasks         Task[]           @relation("TaskAssignee")
+  createdTasks  Task[]           @relation("TaskCreator")
+  interactions  Interaction[]
+  notes         Note[]
+  messages      Message[]
+  voiceNotes    VoiceNote[]
+  appointments  Appointment[]
+  eventAttendances EventAttendance[]
+  userStats     UserStats?
+  achievements  UserAchievement[]
+  activityLogs  ActivityLog[]    @relation("ActivityActor")
+  dealBriefs    DealBrief[]
+
+  @@index([dealershipId])
+  @@index([email])
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verifications")
+}
+
+// ─── Customers ───────────────────────────────────────────────────────────────
+
+model Customer {
+  id              String    @id @default(cuid())
+  dealershipId    String
+  dealership      Dealership @relation(fields: [dealershipId], references: [id])
+  assignedToId    String?
+  assignedTo      User?     @relation("AssignedSalesperson", fields: [assignedToId], references: [id])
+
+  firstName       String
+  lastName        String
+  email           String?
+  phone           String?
+  address         String?
+  city            String?
+  state           String?
+  zip             String?
+
+  birthday        DateTime?
+  instagram       String?
+  facebook        String?
+
+  currentBike     String?
+  dreamBike       String?
+  tradeInfo       Json?
+  spouseName      String?
+  kidsInfo        String?
+  militaryStatus  String?
+  isVeteran       Boolean   @default(false)
+  occupation      String?
+  favoriteLocations String?
+  favoriteColors  String?
+  favoriteAccessories String?
+  helmetSize      String?
+  gearNotes       String?
+
+  serviceHistory  Json      @default("[]")
+  purchaseHistory Json      @default("[]")
+  financingHistory Json     @default("[]")
+  creditConcerns  String?
+  referralSource  String?
+
+  valueScore        Int       @default(0)
+  relationshipScore Int       @default(0)
+  aiSummary         String?
+  customFields      Json      @default("{}")
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  interactions    Interaction[]
+  notes           Note[]
+  deals           Deal[]
+  tasks             Task[]
+  tags              CustomerTag[]
+  mediaAssets       MediaAsset[]
+  voiceNotes        VoiceNote[]
+  messages          Message[]
+  appointments      Appointment[]
+  eventRegistrations EventRegistration[]
+  eventAttendances  EventAttendance[]
+  tradeEstimates    TradeEstimate[]
+  paymentQuotes     PaymentQuote[]
+  followUpEnrollments FollowUpEnrollment[]
+  dealBriefs        DealBrief[]
+  aiInsights        CustomerAiInsight?
+
+  @@index([dealershipId])
+  @@index([assignedToId])
+  @@index([email])
+  @@index([phone])
+  @@index([lastName, firstName])
+  @@index([deletedAt])
+  @@map("customers")
+}
+
+model CustomerAiInsight {
+  id                    String   @id @default(cuid())
+  customerId            String   @unique
+  customer              Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  conversationSummary   String?
+  buyingSignals         Json     @default("[]")
+  riskFactors           Json     @default("[]")
+  likelyObjections      Json     @default("[]")
+  favoriteTopics        Json     @default("[]")
+  suggestedOpener       String?
+  recommendedFollowUp   String?
+  budgetTarget          String?
+  closeProbability      Float?
+  updatedAt             DateTime @updatedAt
+
+  @@map("customer_ai_insights")
+}
+
+model DealBrief {
+  id              String   @id @default(cuid())
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  generatedById   String?
+  generatedBy     User?    @relation(fields: [generatedById], references: [id])
+  headline        String
+  lastContact     String?
+  keyFacts        Json     @default("[]")
+  tradeInfo       String?
+  budgetTarget    String?
+  biggestObjection String?
+  recommendedOpening String?
+  matchingInventory Json   @default("[]")
+  rawContent      Json
+  createdAt       DateTime @default(now())
+
+  @@index([customerId])
+  @@map("deal_briefs")
+}
+
+// ─── Timeline ────────────────────────────────────────────────────────────────
+
+model Interaction {
+  id           String          @id @default(cuid())
+  customerId   String
+  customer     Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  userId       String?
+  user         User?           @relation(fields: [userId], references: [id])
+  type         InteractionType
+  title        String
+  description  String?
+  metadata     Json            @default("{}")
+  occurredAt   DateTime        @default(now())
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  deletedAt    DateTime?
+
+  @@index([customerId])
+  @@index([occurredAt])
+  @@index([type])
+  @@map("interactions")
+}
+
+model Note {
+  id          String    @id @default(cuid())
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+  content     String
+  embedding   Unsupported("vector(1536)")?
+  isPinned    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([customerId])
+  @@map("notes")
+}
+
+model VoiceNote {
+  id           String   @id @default(cuid())
+  customerId   String
+  customer     Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  audioUrl     String
+  durationSec  Int?
+  transcript   String?
+  summary      String?
+  extractedFacts Json   @default("{}")
+  status       String   @default("processing")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([customerId])
+  @@map("voice_notes")
+}
+
+// ─── Deals & Pipeline ────────────────────────────────────────────────────────
+
+model Deal {
+  id              String    @id @default(cuid())
+  dealershipId    String
+  dealership      Dealership @relation(fields: [dealershipId], references: [id])
+  customerId      String
+  customer        Customer  @relation(fields: [customerId], references: [id])
+  assignedToId    String?
+  assignedTo      User?     @relation(fields: [assignedToId], references: [id])
+  inventoryUnitId String?
+  inventoryUnit   InventoryUnit? @relation(fields: [inventoryUnitId], references: [id])
+
+  stage           DealStage @default(WALK_IN)
+  title           String
+  amount          Decimal?  @db.Decimal(12, 2)
+  monthlyTarget   Decimal?  @db.Decimal(10, 2)
+  lostReason      String?
+  closeProbability Float?
+  notes           String?
+  metadata        Json      @default("{}")
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+  closedAt        DateTime?
+
+  @@index([dealershipId])
+  @@index([customerId])
+  @@index([stage])
+  @@index([assignedToId])
+  @@map("deals")
+}
+
+// ─── Tasks ───────────────────────────────────────────────────────────────────
+
+model Task {
+  id            String       @id @default(cuid())
+  dealershipId  String
+  dealership    Dealership   @relation(fields: [dealershipId], references: [id])
+  customerId    String?
+  customer      Customer?    @relation(fields: [customerId], references: [id])
+  assignedToId  String?
+  assignedTo    User?        @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  createdById   String?
+  createdBy     User?        @relation("TaskCreator", fields: [createdById], references: [id])
+
+  title         String
+  description   String?
+  status        TaskStatus   @default(PENDING)
+  priority      TaskPriority @default(MEDIUM)
+  dueAt         DateTime?
+  completedAt   DateTime?
+  metadata      Json         @default("{}")
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+
+  @@index([dealershipId])
+  @@index([assignedToId])
+  @@index([customerId])
+  @@index([status])
+  @@index([dueAt])
+  @@map("tasks")
+}
+
+// ─── Follow-up Engine ────────────────────────────────────────────────────────
+
+model FollowUpSequence {
+  id            String   @id @default(cuid())
+  dealershipId  String
+  dealership    Dealership @relation(fields: [dealershipId], references: [id])
+  name          String
+  description   String?
+  triggerType   String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  steps         FollowUpStep[]
+  enrollments   FollowUpEnrollment[]
+
+  @@index([dealershipId])
+  @@map("follow_up_sequences")
+}
+
+model FollowUpStep {
+  id          String           @id @default(cuid())
+  sequenceId  String
+  sequence    FollowUpSequence @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  order       Int
+  delayDays   Int
+  type        FollowUpStepType
+  title       String
+  template    String?
+  metadata    Json             @default("{}")
+
+  @@index([sequenceId])
+  @@map("follow_up_steps")
+}
+
+model FollowUpEnrollment {
+  id           String           @id @default(cuid())
+  sequenceId   String
+  sequence     FollowUpSequence @relation(fields: [sequenceId], references: [id])
+  customerId   String
+  customer     Customer         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  currentStep  Int              @default(0)
+  isActive     Boolean          @default(true)
+  startedAt    DateTime         @default(now())
+  nextRunAt    DateTime?
+  completedAt  DateTime?
+
+  @@index([customerId])
+  @@index([nextRunAt])
+  @@map("follow_up_enrollments")
+}
+
+// ─── Inventory ───────────────────────────────────────────────────────────────
+
+model InventoryUnit {
+  id            String          @id @default(cuid())
+  dealershipId  String
+  dealership    Dealership      @relation(fields: [dealershipId], references: [id])
+
+  vin           String?
+  stockNumber   String?
+  year          Int
+  make          String
+  model         String
+  trim          String?
+  color         String?
+  mileage       Int?
+  price         Decimal         @db.Decimal(12, 2)
+  engine        String?
+  status        InventoryStatus @default(AVAILABLE)
+
+  hasAbs        Boolean         @default(false)
+  hasNavigation Boolean         @default(false)
+  hasCruise     Boolean         @default(false)
+  hasTourPack   Boolean         @default(false)
+  stageUpgrades String?
+  description   String?
+  photos        Json            @default("[]")
+  specs         Json            @default("{}")
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  deletedAt     DateTime?
+
+  deals         Deal[]
+  tradeEstimates TradeEstimate[]
+
+  @@index([dealershipId])
+  @@index([vin])
+  @@index([status])
+  @@index([make, model])
+  @@map("inventory_units")
+}
+
+// ─── Trade & Payment ─────────────────────────────────────────────────────────
+
+model TradeEstimate {
+  id              String    @id @default(cuid())
+  dealershipId    String
+  dealership      Dealership @relation(fields: [dealershipId], references: [id])
+  customerId      String?
+  customer        Customer? @relation(fields: [customerId], references: [id])
+  inventoryUnitId String?
+  inventoryUnit   InventoryUnit? @relation(fields: [inventoryUnitId], references: [id])
+
+  vin             String?
+  year            Int?
+  make            String?
+  model           String?
+  mileage         Int?
+  condition       String?
+  accessories     String?
+  photos          Json      @default("[]")
+  estimatedTrade  Decimal?  @db.Decimal(12, 2)
+  marketValue     Decimal?  @db.Decimal(12, 2)
+  auctionValue    Decimal?  @db.Decimal(12, 2)
+  dealerEstimate  Decimal?  @db.Decimal(12, 2)
+  notes           String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([dealershipId])
+  @@index([customerId])
+  @@map("trade_estimates")
+}
+
+model PaymentQuote {
+  id            String    @id @default(cuid())
+  dealershipId  String
+  dealership    Dealership @relation(fields: [dealershipId], references: [id])
+  customerId    String?
+  customer      Customer? @relation(fields: [customerId], references: [id])
+
+  bikePrice     Decimal   @db.Decimal(12, 2)
+  tradeValue    Decimal   @default(0) @db.Decimal(12, 2)
+  downPayment   Decimal   @default(0) @db.Decimal(12, 2)
+  apr           Decimal   @db.Decimal(5, 3)
+  termMonths    Int
+  taxRate       Decimal   @default(0) @db.Decimal(5, 3)
+  accessories   Decimal   @default(0) @db.Decimal(12, 2)
+  warranty      Decimal   @default(0) @db.Decimal(12, 2)
+  gap           Decimal   @default(0) @db.Decimal(12, 2)
+  monthlyPayment Decimal  @db.Decimal(10, 2)
+  totalCost     Decimal   @db.Decimal(12, 2)
+  metadata      Json      @default("{}")
+
+  createdAt     DateTime  @default(now())
+
+  @@index([dealershipId])
+  @@index([customerId])
+  @@map("payment_quotes")
+}
+
+// ─── Events ──────────────────────────────────────────────────────────────────
+
+model Event {
+  id            String      @id @default(cuid())
+  dealershipId  String
+  dealership    Dealership  @relation(fields: [dealershipId], references: [id])
+
+  title         String
+  description   String?
+  location      String?
+  startsAt      DateTime
+  endsAt        DateTime?
+  status        EventStatus @default(DRAFT)
+  qrCode        String?
+  metadata      Json        @default("{}")
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+
+  registrations EventRegistration[]
+  attendances   EventAttendance[]
+
+  @@index([dealershipId])
+  @@index([startsAt])
+  @@map("events")
+}
+
+model EventRegistration {
+  id          String   @id @default(cuid())
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  registeredAt DateTime @default(now())
+  checkedIn   Boolean  @default(false)
+  checkedInAt DateTime?
+
+  @@unique([eventId, customerId])
+  @@map("event_registrations")
+}
+
+model EventAttendance {
+  id          String   @id @default(cuid())
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  attendedAt  DateTime @default(now())
+  purchasedAfter Boolean @default(false)
+
+  @@index([eventId])
+  @@map("event_attendances")
+}
+
+// ─── Appointments ────────────────────────────────────────────────────────────
+
+model Appointment {
+  id            String   @id @default(cuid())
+  dealershipId  String
+  dealership    Dealership @relation(fields: [dealershipId], references: [id])
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id])
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+
+  title         String
+  description   String?
+  startsAt      DateTime
+  endsAt        DateTime?
+  location      String?
+  isConfirmed   Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+
+  @@index([dealershipId])
+  @@index([customerId])
+  @@index([startsAt])
+  @@map("appointments")
+}
+
+// ─── Messaging ───────────────────────────────────────────────────────────────
+
+model MessageTemplate {
+  id            String         @id @default(cuid())
+  dealershipId  String
+  dealership    Dealership     @relation(fields: [dealershipId], references: [id])
+  name          String
+  channel       MessageChannel
+  subject       String?
+  body          String
+  variables     Json           @default("[]")
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([dealershipId])
+  @@map("message_templates")
+}
+
+model Message {
+  id            String        @id @default(cuid())
+  dealershipId  String
+  dealership    Dealership    @relation(fields: [dealershipId], references: [id])
+  customerId    String?
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  userId        String?
+  user          User?         @relation(fields: [userId], references: [id])
+
+  channel       MessageChannel
+  status        MessageStatus @default(DRAFT)
+  subject       String?
+  body          String
+  toAddress     String
+  fromAddress   String?
+  externalId    String?
+  deliveredAt   DateTime?
+  readAt        DateTime?
+  metadata      Json          @default("{}")
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([dealershipId])
+  @@index([customerId])
+  @@index([status])
+  @@map("messages")
+}
+
+// ─── Knowledge Base ──────────────────────────────────────────────────────────
+
+model KnowledgeArticle {
+  id            String   @id @default(cuid())
+  dealershipId  String
+  dealership    Dealership @relation(fields: [dealershipId], references: [id])
+
+  title         String
+  slug          String
+  category      String
+  content       String
+  embedding     Unsupported("vector(1536)")?
+  isPublished   Boolean  @default(true)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+
+  @@unique([dealershipId, slug])
+  @@index([dealershipId])
+  @@index([category])
+  @@map("knowledge_articles")
+}
+
+// ─── Media ───────────────────────────────────────────────────────────────────
+
+model MediaAsset {
+  id          String    @id @default(cuid())
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type        MediaType
+  url         String
+  filename    String?
+  mimeType    String?
+  sizeBytes   Int?
+  metadata    Json      @default("{}")
+
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
+
+  @@index([customerId])
+  @@map("media_assets")
+}
+
+// ─── Tags ────────────────────────────────────────────────────────────────────
+
+model Tag {
+  id            String   @id @default(cuid())
+  dealershipId  String
+  dealership    Dealership @relation(fields: [dealershipId], references: [id])
+  name          String
+  color         String   @default("#f97316")
+  createdAt     DateTime @default(now())
+
+  customers     CustomerTag[]
+
+  @@unique([dealershipId, name])
+  @@map("tags")
+}
+
+model CustomerTag {
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tagId       String
+  tag         Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([customerId, tagId])
+  @@map("customer_tags")
+}
+
+// ─── Gamification ──────────────────────────────────────────────────────────────
+
+model UserStats {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  xp              Int      @default(0)
+  level           Int      @default(1)
+  dailyStreak     Int      @default(0)
+  followUpStreak  Int      @default(0)
+  closingStreak   Int      @default(0)
+  totalDeals      Int      @default(0)
+  totalRevenue    Decimal  @default(0) @db.Decimal(14, 2)
+  lastActiveDate  DateTime?
+  updatedAt       DateTime @updatedAt
+
+  @@map("user_stats")
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String
+  icon        String
+  xpReward    Int      @default(100)
+  criteria    Json     @default("{}")
+
+  users       UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  earnedAt      DateTime    @default(now())
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+// ─── Audit ───────────────────────────────────────────────────────────────────
+
+model ActivityLog {
+  id            String   @id @default(cuid())
+  dealershipId  String
+  dealership    Dealership @relation(fields: [dealershipId], references: [id])
+  actorId       String?
+  actor         User?    @relation("ActivityActor", fields: [actorId], references: [id])
+
+  action        String
+  entityType    String
+  entityId      String
+  changes       Json     @default("{}")
+  metadata      Json     @default("{}")
+
+  createdAt     DateTime @default(now())
+
+  @@index([dealershipId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
