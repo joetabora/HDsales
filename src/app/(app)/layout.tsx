@@ -11,11 +11,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <QueryProvider>
       <CommandPaletteProvider>
-        <div className="flex min-h-screen bg-forge-background">
+        <div className="flex min-h-dvh app-ambient">
           <AppSidebar />
           <div className="flex flex-1 flex-col min-w-0">
             <AppHeader user={session.user} />
-            <main className="flex-1 overflow-auto p-4 lg:p-6 pb-24 lg:pb-6">{children}</main>
+            <main className="flex-1 overflow-x-hidden px-4 py-5 lg:px-8 lg:py-7 pb-28 lg:pb-8 animate-enter">
+              <div className="mx-auto w-full max-w-6xl">{children}</div>
+            </main>
           </div>
         </div>
         <MobileNav />

@@ -34,7 +34,7 @@ export default async function TasksPage() {
             {openCount} open task{openCount !== 1 ? "s" : ""}
           </p>
         </div>
-        <div className="w-48">
+        <div className="w-auto shrink-0 sm:w-48">
           <NewTaskForm />
         </div>
       </div>

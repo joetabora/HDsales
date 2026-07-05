@@ -1,16 +1,18 @@
 "use client";
 
-import { useCallback, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { ChevronDown, Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 export function InventoryFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const [expanded, setExpanded] = useState(false);
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -36,9 +38,22 @@ export function InventoryFilters() {
   const hasFilters = searchParams.toString().length > 0;
 
   return (
-    <div className="rounded-xl border border-forge-border bg-forge-surface/50 p-4 space-y-4">
+    <div className="rounded-2xl border border-forge-border card-sheen p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">Filters</h3>
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="flex items-center gap-2 text-sm font-semibold sm:pointer-events-none"
+        >
+          <SlidersHorizontal className="h-4 w-4 text-forge-accent" />
+          Filters
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 text-forge-muted transition-transform sm:hidden",
+              expanded && "rotate-180"
+            )}
+          />
+        </button>
         {hasFilters && (
           <Button variant="ghost" size="sm" onClick={clearFilters} disabled={isPending}>
             <X className="h-3 w-3 mr-1" />
@@ -47,7 +62,12 @@ export function InventoryFilters() {
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div
+        className={cn(
+          "grid gap-4 sm:grid-cols-2 lg:grid-cols-4",
+          !expanded && !hasFilters && "hidden sm:grid"
+        )}
+      >
         <div className="space-y-1.5">
           <Label htmlFor="search">Search</Label>
           <div className="relative">
@@ -131,7 +151,12 @@ export function InventoryFilters() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3 pt-2">
+      <div
+        className={cn(
+          "flex flex-wrap gap-2 pt-1",
+          !expanded && !hasFilters && "hidden sm:flex"
+        )}
+      >
         {(
           [
             ["hasAbs", "ABS"],

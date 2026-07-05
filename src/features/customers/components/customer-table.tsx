@@ -7,10 +7,10 @@ import {
   useReactTable,
   type ColumnDef,
 } from "@tanstack/react-table";
-import { ArrowUpDown, Mail, Phone } from "lucide-react";
+import { ArrowUpDown, ChevronRight, Mail, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatPhone, fullName } from "@/lib/utils";
+import { formatPhone, fullName, getInitials } from "@/lib/utils";
 
 export type CustomerRow = {
   id: string;
@@ -132,6 +132,34 @@ interface CustomerTableProps {
   customers: CustomerRow[];
 }
 
+function MobileCustomerCard({ customer: c }: { customer: CustomerRow }) {
+  return (
+    <Link
+      href={`/customers/${c.id}`}
+      className="flex items-center gap-3 rounded-2xl border border-forge-border card-sheen p-3.5 active:scale-[0.985] transition-transform"
+    >
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-forge-accent/12 text-forge-accent text-sm font-semibold ring-1 ring-forge-accent/20">
+        {getInitials(fullName(c.firstName, c.lastName))}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <p className="font-medium truncate">{fullName(c.firstName, c.lastName)}</p>
+          <Badge
+            variant={c.valueScore >= 70 ? "success" : c.valueScore >= 40 ? "warning" : "secondary"}
+            className="shrink-0 text-[10px] px-2"
+          >
+            {c.valueScore}
+          </Badge>
+        </div>
+        <p className="text-xs text-forge-muted truncate mt-0.5">
+          {c.dreamBike ?? (c.phone ? formatPhone(c.phone) : c.email) ?? "No details yet"}
+        </p>
+      </div>
+      <ChevronRight className="h-4 w-4 shrink-0 text-forge-muted" />
+    </Link>
+  );
+}
+
 export function CustomerTable({ customers }: CustomerTableProps) {
   const table = useReactTable({
     data: customers,
@@ -140,47 +168,59 @@ export function CustomerTable({ customers }: CustomerTableProps) {
   });
 
   return (
-    <div className="rounded-xl border border-forge-border overflow-hidden">
-      <table className="w-full text-sm">
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id} className="border-b border-forge-border bg-forge-surface/50">
-              {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  className="h-11 px-4 text-left align-middle font-medium text-forge-muted-foreground"
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.length === 0 ? (
-            <tr>
-              <td colSpan={columns.length} className="h-24 text-center text-forge-muted">
-                No customers found
-              </td>
-            </tr>
-          ) : (
-            table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className="border-b border-forge-border last:border-0 hover:bg-forge-surface-hover/50 transition-colors"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-4 py-3 align-middle">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
+    <>
+      {/* Mobile: tappable cards */}
+      <div className="space-y-2.5 md:hidden">
+        {customers.length === 0 ? (
+          <p className="py-12 text-center text-sm text-forge-muted">No customers found</p>
+        ) : (
+          customers.map((c) => <MobileCustomerCard key={c.id} customer={c} />)
+        )}
+      </div>
+
+      {/* Desktop: full table */}
+      <div className="hidden md:block rounded-2xl border border-forge-border overflow-hidden card-sheen">
+        <table className="w-full text-sm">
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id} className="border-b border-forge-border bg-forge-surface-raised/50">
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className="h-11 px-4 text-left align-middle font-medium text-forge-muted-foreground"
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </th>
                 ))}
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="h-24 text-center text-forge-muted">
+                  No customers found
+                </td>
+              </tr>
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  className="border-b border-forge-border last:border-0 hover:bg-forge-surface-hover/50 transition-colors"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="px-4 py-3 align-middle">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

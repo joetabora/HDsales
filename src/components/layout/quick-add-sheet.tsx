@@ -62,7 +62,7 @@ export function QuickAddSheet({ open, onOpenChange }: QuickAddSheetProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md border-forge-border bg-forge-surface">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-forge-accent" />

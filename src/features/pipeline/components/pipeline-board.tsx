@@ -7,6 +7,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   useDroppable,
@@ -91,7 +92,7 @@ function DealCard({ deal, isDragging }: { deal: PipelineDeal; isDragging?: boole
       ref={setNodeRef}
       style={style}
       className={cn(
-        "rounded-lg border border-forge-border bg-forge-surface p-3 shadow-sm transition-shadow",
+        "rounded-xl border border-forge-border card-sheen p-3 transition-shadow",
         isDragging && "opacity-50 shadow-lg ring-2 ring-forge-accent/30"
       )}
     >
@@ -143,7 +144,7 @@ function StageColumn({ stage, deals }: { stage: DealStage; deals: PipelineDeal[]
   const { setNodeRef, isOver } = useDroppable({ id: stage });
 
   return (
-    <div className="flex w-72 shrink-0 flex-col">
+    <div className="flex w-[82vw] max-w-[288px] sm:w-72 shrink-0 snap-start flex-col">
       <div
         className={cn(
           "mb-3 flex items-center justify-between rounded-lg border px-3 py-2",
@@ -179,7 +180,10 @@ export function PipelineBoard({ initialColumns }: { initialColumns: PipelineColu
   const [updating, setUpdating] = useState(false);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 8 },
+    })
   );
 
   function findDeal(dealId: string) {
@@ -245,7 +249,7 @@ export function PipelineBoard({ initialColumns }: { initialColumns: PipelineColu
         </div>
       )}
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory sm:snap-none -mx-4 px-4 lg:mx-0 lg:px-0">
           {activeStages.map((col) => (
             <StageColumn key={col.stage} stage={col.stage} deals={col.deals} />
           ))}

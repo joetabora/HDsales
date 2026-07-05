@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Loader2, Sparkles } from "lucide-react";
+import { Flame, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,8 +49,8 @@ export default function SignupPage() {
     >
       <Card className="border-forge-border bg-forge-surface/80 backdrop-blur-xl shadow-2xl">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-forge-accent shadow-lg shadow-forge-accent/30">
-            <Sparkles className="h-7 w-7 text-white" />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-b from-forge-accent-hot to-forge-accent glow-accent">
+            <Flame className="h-7 w-7 text-white" />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold">Create your Forge account</CardTitle>

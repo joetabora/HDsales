@@ -34,11 +34,19 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border border-forge-border bg-forge-surface p-6 shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-xl",
+        // Bottom sheet on mobile, centered dialog on sm+
+        "fixed z-50 grid w-full gap-4 border border-forge-border bg-forge-surface-raised p-5 shadow-2xl duration-300",
+        "inset-x-0 bottom-0 rounded-t-3xl border-b-0 pb-[max(1.25rem,env(safe-area-inset-bottom))] max-h-[92dvh] overflow-y-auto",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+        "data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom",
+        "sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:border-b sm:p-6 sm:pb-6",
+        "sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95 sm:data-[state=closed]:slide-out-to-left-1/2 sm:data-[state=closed]:slide-out-to-top-[48%] sm:data-[state=open]:slide-in-from-left-1/2 sm:data-[state=open]:slide-in-from-top-[48%]",
         className
       )}
       {...props}
     >
+      {/* Grab handle on mobile */}
+      <div className="mx-auto -mt-1 mb-1 h-1 w-10 rounded-full bg-forge-border-strong sm:hidden" />
       {children}
       <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-forge-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-forge-accent/50 disabled:pointer-events-none">
         <X className="h-4 w-4" />

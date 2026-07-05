@@ -37,11 +37,16 @@ function FactRow({
 
 export function WalkUpCard({ data, customerId }: WalkUpCardProps) {
   return (
-    <Card className="border-forge-accent/30 bg-gradient-to-br from-forge-accent/5 to-transparent">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between gap-2">
+    <Card className="relative overflow-hidden border-forge-accent/30">
+      {/* Ember glow across the top edge */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-forge-accent/70 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(255,92,31,0.08),transparent_55%)]" />
+      <CardHeader className="pb-3 relative">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Bike className="h-5 w-5 text-forge-accent" />
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-forge-accent/15 ring-1 ring-forge-accent/25">
+              <Bike className="h-4.5 w-4.5 text-forge-accent" />
+            </span>
             Walk-Up Card
           </CardTitle>
           {data.isStale && (
@@ -55,8 +60,8 @@ export function WalkUpCard({ data, customerId }: WalkUpCardProps) {
           <p className="text-sm text-forge-muted-foreground">{data.lastContact}</p>
         )}
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2">
+      <CardContent className="space-y-4 relative">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
           <FactRow label="Dream Bike" value={data.dreamBike} editAnchor="edit-customer" />
           <FactRow label="Trade / Current" value={data.tradeInfo} editAnchor="edit-customer" />
           <FactRow label="Budget" value={data.budgetTarget} />

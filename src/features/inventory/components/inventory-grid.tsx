@@ -46,9 +46,9 @@ export function InventoryGrid({ units }: { units: InventoryUnitItem[] }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {units.map((unit) => (
-        <Card key={unit.id} className="overflow-hidden hover:border-forge-accent/30 transition-colors">
-          <div className="h-32 bg-gradient-to-br from-forge-surface to-forge-background flex items-center justify-center border-b border-forge-border">
-            <Package className="h-12 w-12 text-forge-muted/50" />
+        <Card key={unit.id} className="overflow-hidden hover:border-forge-accent/40 hover:shadow-[0_0_24px_-8px_var(--forge-accent-glow)] transition-all duration-300">
+          <div className="h-28 sm:h-32 bg-[radial-gradient(ellipse_at_top,rgba(255,92,31,0.08),transparent_60%)] flex items-center justify-center border-b border-forge-border">
+            <Package className="h-10 w-10 text-forge-muted/40" />
           </div>
           <CardHeader className="pb-2">
             <div className="flex items-start justify-between gap-2">

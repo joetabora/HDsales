@@ -66,7 +66,64 @@ export function CalendarView({ appointments }: { appointments: AppointmentItem[]
         </Button>
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      {/* Mobile: stacked agenda */}
+      <div className="space-y-3 md:hidden">
+        {days.map((day) => {
+          const key = format(day, "yyyy-MM-dd");
+          const dayAppointments = appointmentsByDay.get(key) ?? [];
+          const isToday = isSameDay(day, new Date());
+
+          return (
+            <div
+              key={key}
+              className={`rounded-2xl border p-3.5 ${
+                isToday
+                  ? "border-forge-accent/40 bg-forge-accent/5"
+                  : "border-forge-border card-sheen"
+              }`}
+            >
+              <div className="flex items-baseline gap-2">
+                <p className={`text-lg font-bold stat-number ${isToday ? "text-forge-accent" : ""}`}>
+                  {format(day, "d")}
+                </p>
+                <p className="text-xs font-medium uppercase tracking-wide text-forge-muted">
+                  {format(day, "EEEE")}
+                  {isToday && <span className="ml-1.5 text-forge-accent">· Today</span>}
+                </p>
+              </div>
+              {dayAppointments.length === 0 ? (
+                <p className="mt-2 text-xs text-forge-muted">No appointments</p>
+              ) : (
+                <div className="mt-2.5 space-y-2">
+                  {dayAppointments.map((apt) => (
+                    <Link
+                      key={apt.id}
+                      href={`/customers/${apt.customer.id}`}
+                      className="flex items-center justify-between gap-3 rounded-xl border border-forge-border bg-forge-surface-raised/50 p-3 active:scale-[0.99] transition-transform"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{apt.title}</p>
+                        <p className="text-xs text-forge-muted truncate">
+                          {format(new Date(apt.startsAt), "h:mm a")} ·{" "}
+                          {fullName(apt.customer.firstName, apt.customer.lastName)}
+                        </p>
+                      </div>
+                      {apt.isConfirmed && (
+                        <Badge variant="success" className="shrink-0 text-[10px]">
+                          Confirmed
+                        </Badge>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: week grid */}
+      <div className="hidden md:grid grid-cols-7 gap-2">
         {days.map((day) => {
           const key = format(day, "yyyy-MM-dd");
           const dayAppointments = appointmentsByDay.get(key) ?? [];

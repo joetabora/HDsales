@@ -62,7 +62,7 @@ export default async function ReportsPage() {
     }),
   ]);
 
-  const revenue = totalRevenue._sum.amount ? Number(totalRevenue._sum.amount) : soldThisMonth * 28500;
+  const revenue = totalRevenue._sum.amount ? Number(totalRevenue._sum.amount) : 0;
   const closingRatio = totalCustomers > 0 ? Math.round((soldThisMonth / totalCustomers) * 1000) / 10 : 0;
   const maxStageCount = Math.max(...dealsByStage.map((d) => d._count.id), 1);
 
@@ -92,17 +92,17 @@ export default async function ReportsPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         {metrics.map((metric) => (
-          <Card key={metric.label}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardDescription>{metric.label}</CardDescription>
+          <div key={metric.label} className="rounded-2xl border border-forge-border card-sheen p-4 lg:p-5">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] lg:text-xs font-medium text-forge-muted uppercase tracking-wide">
+                {metric.label}
+              </p>
               <metric.icon className="h-4 w-4 text-forge-muted" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metric.value}</div>
-            </CardContent>
-          </Card>
+            </div>
+            <p className="mt-2 text-xl lg:text-3xl font-bold stat-number truncate">{metric.value}</p>
+          </div>
         ))}
       </div>
 
